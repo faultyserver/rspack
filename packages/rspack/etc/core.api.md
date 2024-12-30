@@ -50,6 +50,7 @@ import { JsHtmlPluginTag } from '@rspack/binding';
 import { JsLoaderItem } from '@rspack/binding';
 import { JsModule } from '@rspack/binding';
 import type { JsModuleGraph } from '@rspack/binding';
+import type { JsModuleGraphConnection } from '@rspack/binding';
 import { JsRuntimeModule } from '@rspack/binding';
 import type { JsStats } from '@rspack/binding';
 import type { JsStatsCompilation } from '@rspack/binding';
@@ -1112,6 +1113,7 @@ export type Context = string;
 // @public (undocumented)
 type ContextInfo = {
     issuer: string;
+    issuerLayer?: string;
 };
 
 // @public (undocumented)
@@ -2432,6 +2434,7 @@ export type Incremental = {
     inferAsyncModules?: boolean;
     providedExports?: boolean;
     dependenciesDiagnostics?: boolean;
+    sideEffects?: boolean;
     buildChunkGraph?: boolean;
     moduleIds?: boolean;
     chunkIds?: boolean;
@@ -2745,6 +2748,11 @@ type JsonObject_2 = {
     [Key in string]: JsonValue_2;
 } & {
     [Key in string]?: JsonValue_2 | undefined;
+};
+
+// @public (undocumented)
+export type JsonParserOptions = {
+    exportsDepth?: number;
 };
 
 // @public (undocumented)
@@ -3758,11 +3766,29 @@ class ModuleGraph {
     // (undocumented)
     static __from_binding(binding: JsModuleGraph): ModuleGraph;
     // (undocumented)
+    getConnection(dependency: Dependency): ModuleGraphConnection | null;
+    // (undocumented)
     getExportsInfo(module: Module): ExportsInfo;
     // (undocumented)
     getIssuer(module: Module): Module | null;
     // (undocumented)
     getModule(dependency: Dependency): Module | null;
+    // (undocumented)
+    getOutgoingConnections(module: Module): ModuleGraphConnection[];
+    // (undocumented)
+    getResolvedModule(dependency: Dependency): Module | null;
+}
+
+// @public (undocumented)
+class ModuleGraphConnection {
+    // (undocumented)
+    static __from_binding(binding: JsModuleGraphConnection): ModuleGraphConnection;
+    // (undocumented)
+    static __to_binding(data: ModuleGraphConnection): JsModuleGraphConnection;
+    // (undocumented)
+    readonly dependency: Dependency;
+    // (undocumented)
+    readonly module: Module | null;
 }
 
 // @public (undocumented)
@@ -4107,6 +4133,7 @@ export type Optimization = {
     mangleExports?: "size" | "deterministic" | boolean;
     nodeEnv?: string | false;
     emitOnErrors?: boolean;
+    avoidEntryIife?: boolean;
 };
 
 // @public
@@ -4128,7 +4155,7 @@ export type OptimizationSplitChunksCacheGroup = {
     test?: string | RegExp | ((module: Module) => unknown);
     priority?: number;
     enforce?: boolean;
-    filename?: string;
+    filename?: Filename;
     reuseExistingChunk?: boolean;
     type?: string | RegExp;
     idHint?: string;
@@ -4460,6 +4487,7 @@ export type ParserOptionsByModuleTypeKnown = {
     "javascript/auto"?: JavascriptParserOptions;
     "javascript/dynamic"?: JavascriptParserOptions;
     "javascript/esm"?: JavascriptParserOptions;
+    json?: JsonParserOptions;
 };
 
 // @public
@@ -5308,6 +5336,7 @@ declare namespace rspackExports {
         CssAutoParserOptions,
         CssModuleParserOptions,
         JavascriptParserOptions,
+        JsonParserOptions,
         ParserOptionsByModuleTypeKnown,
         ParserOptionsByModuleTypeUnknown,
         ParserOptionsByModuleType,
@@ -6410,6 +6439,7 @@ export const rspackOptions: z.ZodObject<{
             inferAsyncModules: z.ZodOptional<z.ZodBoolean>;
             providedExports: z.ZodOptional<z.ZodBoolean>;
             dependenciesDiagnostics: z.ZodOptional<z.ZodBoolean>;
+            sideEffects: z.ZodOptional<z.ZodBoolean>;
             buildChunkGraph: z.ZodOptional<z.ZodBoolean>;
             moduleIds: z.ZodOptional<z.ZodBoolean>;
             chunkIds: z.ZodOptional<z.ZodBoolean>;
@@ -6425,6 +6455,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -6440,6 +6471,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -6525,6 +6557,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -6590,6 +6623,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -6968,13 +7002,13 @@ export const rspackOptions: z.ZodObject<{
                 test: z.ZodOptional<z.ZodUnion<[z.ZodUnion<[z.ZodString, z.ZodType<RegExp, z.ZodTypeDef, RegExp>]>, z.ZodFunction<z.ZodTuple<[z.ZodType<Module, z.ZodTypeDef, Module>], z.ZodUnknown>, z.ZodUnknown>]>>;
                 priority: z.ZodOptional<z.ZodNumber>;
                 enforce: z.ZodOptional<z.ZodBoolean>;
-                filename: z.ZodOptional<z.ZodString>;
+                filename: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodFunction<z.ZodTuple<[z.ZodType<PathData, z.ZodTypeDef, PathData>, z.ZodOptional<z.ZodType<JsAssetInfo, z.ZodTypeDef, JsAssetInfo>>], z.ZodUnknown>, z.ZodString>]>>;
                 reuseExistingChunk: z.ZodOptional<z.ZodBoolean>;
                 type: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodType<RegExp, z.ZodTypeDef, RegExp>]>>;
                 idHint: z.ZodOptional<z.ZodString>;
             }, "strict", z.ZodTypeAny, {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -6994,7 +7028,7 @@ export const rspackOptions: z.ZodObject<{
                 idHint?: string | undefined;
             }, {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -7043,7 +7077,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -7086,7 +7120,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -7151,9 +7185,11 @@ export const rspackOptions: z.ZodObject<{
         mangleExports: z.ZodOptional<z.ZodUnion<[z.ZodEnum<["size", "deterministic"]>, z.ZodBoolean]>>;
         nodeEnv: z.ZodOptional<z.ZodUnion<[z.ZodString, z.ZodLiteral<false>]>>;
         emitOnErrors: z.ZodOptional<z.ZodBoolean>;
+        avoidEntryIife: z.ZodOptional<z.ZodBoolean>;
     }, "strict", z.ZodTypeAny, {
         usedExports?: boolean | "global" | undefined;
         providedExports?: boolean | undefined;
+        sideEffects?: boolean | "flag" | undefined;
         moduleIds?: "named" | "natural" | "deterministic" | undefined;
         chunkIds?: "named" | "natural" | "deterministic" | "size" | "total-size" | undefined;
         minimize?: boolean | undefined;
@@ -7166,7 +7202,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -7211,15 +7247,16 @@ export const rspackOptions: z.ZodObject<{
         removeAvailableModules?: boolean | undefined;
         removeEmptyChunks?: boolean | undefined;
         realContentHash?: boolean | undefined;
-        sideEffects?: boolean | "flag" | undefined;
         concatenateModules?: boolean | undefined;
         innerGraph?: boolean | undefined;
         mangleExports?: boolean | "deterministic" | "size" | undefined;
         nodeEnv?: string | false | undefined;
         emitOnErrors?: boolean | undefined;
+        avoidEntryIife?: boolean | undefined;
     }, {
         usedExports?: boolean | "global" | undefined;
         providedExports?: boolean | undefined;
+        sideEffects?: boolean | "flag" | undefined;
         moduleIds?: "named" | "natural" | "deterministic" | undefined;
         chunkIds?: "named" | "natural" | "deterministic" | "size" | "total-size" | undefined;
         minimize?: boolean | undefined;
@@ -7232,7 +7269,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -7277,12 +7314,12 @@ export const rspackOptions: z.ZodObject<{
         removeAvailableModules?: boolean | undefined;
         removeEmptyChunks?: boolean | undefined;
         realContentHash?: boolean | undefined;
-        sideEffects?: boolean | "flag" | undefined;
         concatenateModules?: boolean | undefined;
         innerGraph?: boolean | undefined;
         mangleExports?: boolean | "deterministic" | "size" | undefined;
         nodeEnv?: string | false | undefined;
         emitOnErrors?: boolean | undefined;
+        avoidEntryIife?: boolean | undefined;
     }>>;
     resolve: z.ZodOptional<z.ZodType<t.ResolveOptions, z.ZodTypeDef, t.ResolveOptions>>;
     resolveLoader: z.ZodOptional<z.ZodType<t.ResolveOptions, z.ZodTypeDef, t.ResolveOptions>>;
@@ -7784,7 +7821,7 @@ export const rspackOptions: z.ZodObject<{
                 }, {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                }>, z.ZodFunction<z.ZodTuple<[z.ZodType<Buffer, z.ZodTypeDef, Buffer>, z.ZodObject<{
+                }>, z.ZodFunction<z.ZodTuple<[z.ZodType<Buffer<ArrayBuffer>, z.ZodTypeDef, Buffer<ArrayBuffer>>, z.ZodObject<{
                     filename: z.ZodString;
                     module: z.ZodType<Module, z.ZodTypeDef, Module>;
                 }, "strict", z.ZodTypeAny, {
@@ -7804,7 +7841,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7815,7 +7852,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7831,7 +7868,7 @@ export const rspackOptions: z.ZodObject<{
                 }, {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                }>, z.ZodFunction<z.ZodTuple<[z.ZodType<Buffer, z.ZodTypeDef, Buffer>, z.ZodObject<{
+                }>, z.ZodFunction<z.ZodTuple<[z.ZodType<Buffer<ArrayBuffer>, z.ZodTypeDef, Buffer<ArrayBuffer>>, z.ZodObject<{
                     filename: z.ZodString;
                     module: z.ZodType<Module, z.ZodTypeDef, Module>;
                 }, "strict", z.ZodTypeAny, {
@@ -7845,7 +7882,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7853,7 +7890,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7924,7 +7961,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7946,7 +7983,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7967,7 +8004,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -7989,7 +8026,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8115,7 +8152,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8137,7 +8174,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8263,7 +8300,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8285,7 +8322,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8432,7 +8469,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8454,7 +8491,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -8530,6 +8567,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -8843,6 +8881,7 @@ export const rspackOptions: z.ZodObject<{
     optimization?: {
         usedExports?: boolean | "global" | undefined;
         providedExports?: boolean | undefined;
+        sideEffects?: boolean | "flag" | undefined;
         moduleIds?: "named" | "natural" | "deterministic" | undefined;
         chunkIds?: "named" | "natural" | "deterministic" | "size" | "total-size" | undefined;
         minimize?: boolean | undefined;
@@ -8855,7 +8894,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -8900,12 +8939,12 @@ export const rspackOptions: z.ZodObject<{
         removeAvailableModules?: boolean | undefined;
         removeEmptyChunks?: boolean | undefined;
         realContentHash?: boolean | undefined;
-        sideEffects?: boolean | "flag" | undefined;
         concatenateModules?: boolean | undefined;
         innerGraph?: boolean | undefined;
         mangleExports?: boolean | "deterministic" | "size" | undefined;
         nodeEnv?: string | false | undefined;
         emitOnErrors?: boolean | undefined;
+        avoidEntryIife?: boolean | undefined;
     } | undefined;
     plugins?: (false | "" | 0 | t.RspackPluginInstance | t.WebpackPluginInstance | t.RspackPluginFunction | t.WebpackPluginFunction | null | undefined)[] | undefined;
     watch?: boolean | undefined;
@@ -9034,7 +9073,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -9056,7 +9095,7 @@ export const rspackOptions: z.ZodObject<{
                 dataUrl?: {
                     encoding?: false | "base64" | undefined;
                     mimetype?: string | undefined;
-                } | ((args_0: Buffer, args_1: {
+                } | ((args_0: Buffer<ArrayBuffer>, args_1: {
                     module: Module;
                     filename: string;
                 }, ...args: unknown[]) => string) | undefined;
@@ -9132,6 +9171,7 @@ export const rspackOptions: z.ZodObject<{
             make?: boolean | undefined;
             inferAsyncModules?: boolean | undefined;
             dependenciesDiagnostics?: boolean | undefined;
+            sideEffects?: boolean | undefined;
             buildChunkGraph?: boolean | undefined;
             moduleIds?: boolean | undefined;
             chunkIds?: boolean | undefined;
@@ -9445,6 +9485,7 @@ export const rspackOptions: z.ZodObject<{
     optimization?: {
         usedExports?: boolean | "global" | undefined;
         providedExports?: boolean | undefined;
+        sideEffects?: boolean | "flag" | undefined;
         moduleIds?: "named" | "natural" | "deterministic" | undefined;
         chunkIds?: "named" | "natural" | "deterministic" | "size" | "total-size" | undefined;
         minimize?: boolean | undefined;
@@ -9457,7 +9498,7 @@ export const rspackOptions: z.ZodObject<{
             defaultSizeTypes?: string[] | undefined;
             cacheGroups?: Record<string, false | {
                 name?: string | false | ((args_0: Module | undefined, ...args: unknown[]) => unknown) | undefined;
-                filename?: string | undefined;
+                filename?: string | ((args_0: PathData, args_1: JsAssetInfo | undefined, ...args: unknown[]) => string) | undefined;
                 type?: string | RegExp | undefined;
                 chunks?: RegExp | "initial" | "async" | "all" | ((args_0: Chunk, ...args: unknown[]) => boolean) | undefined;
                 usedExports?: boolean | undefined;
@@ -9502,12 +9543,12 @@ export const rspackOptions: z.ZodObject<{
         removeAvailableModules?: boolean | undefined;
         removeEmptyChunks?: boolean | undefined;
         realContentHash?: boolean | undefined;
-        sideEffects?: boolean | "flag" | undefined;
         concatenateModules?: boolean | undefined;
         innerGraph?: boolean | undefined;
         mangleExports?: boolean | "deterministic" | "size" | undefined;
         nodeEnv?: string | false | undefined;
         emitOnErrors?: boolean | undefined;
+        avoidEntryIife?: boolean | undefined;
     } | undefined;
     plugins?: (false | "" | 0 | t.RspackPluginInstance | t.WebpackPluginInstance | t.RspackPluginFunction | t.WebpackPluginFunction | null | undefined)[] | undefined;
     watch?: boolean | undefined;
@@ -10453,6 +10494,7 @@ declare namespace t {
         CssAutoParserOptions,
         CssModuleParserOptions,
         JavascriptParserOptions,
+        JsonParserOptions,
         ParserOptionsByModuleTypeKnown,
         ParserOptionsByModuleTypeUnknown,
         ParserOptionsByModuleType,

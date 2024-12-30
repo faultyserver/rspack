@@ -236,9 +236,18 @@ export declare class JsModule {
 
 export declare class JsModuleGraph {
   getModule(jsDependency: JsDependency): JsModule | null
+  getResolvedModule(jsDependency: JsDependency): JsModule | null
   getUsedExports(jsModule: JsModule, jsRuntime: string | Array<string>): boolean | Array<string> | null
   getIssuer(module: JsModule): JsModule | null
   getExportsInfo(module: JsModule): JsExportsInfo
+  getConnection(dependency: JsDependency): JsModuleGraphConnection | null
+  getOutgoingConnections(module: JsModule): JsModuleGraphConnection[]
+  getIncomingConnections(module: JsModule): JsModuleGraphConnection[]
+}
+
+export declare class JsModuleGraphConnection {
+  get dependency(): JsDependency
+  get module(): JsModule | null
 }
 
 export declare class JsResolver {
@@ -363,6 +372,7 @@ export declare function cleanupGlobalTrace(): void
 
 export interface ContextInfo {
   issuer: string
+  issuerLayer?: string
 }
 
 export declare function formatDiagnostic(diagnostic: JsDiagnostic): ExternalObject<'Diagnostic'>
@@ -644,6 +654,7 @@ export interface JsExecuteModuleResult {
   cacheable: boolean
   assets: Array<string>
   id: number
+  error?: string
 }
 
 export interface JsFactorizeArgs {
@@ -1177,7 +1188,7 @@ export interface RawCacheGroupOptions {
   key: string
   priority?: number
   test?: RegExp | string | Function
-  filename?: string
+  filename?: JsFilename
   idHint?: string
   /** What kind of chunks should be selected. */
   chunks?: RegExp | 'async' | 'initial' | 'all'
@@ -1379,16 +1390,11 @@ export interface RawEvalDevToolModulePluginOptions {
   sourceUrlComment?: string
 }
 
-export interface RawExperimentCacheOptionsMemory {
-  type: "memory" | "disable"
-}
-
 export interface RawExperimentCacheOptionsPersistent {
-  type: "persistent"
-  buildDependencies: Array<string>
-  version: string
-  snapshot: RawExperimentSnapshotOptions
-  storage: RawStorageOptions
+  buildDependencies?: Array<string>
+  version?: string
+  snapshot?: RawExperimentSnapshotOptions
+  storage?: RawStorageOptions
 }
 
 export interface RawExperiments {
@@ -1396,7 +1402,7 @@ export interface RawExperiments {
   topLevelAwait: boolean
 incremental?: false | { [key: string]: boolean }
 rspackFuture?: RawRspackFuture
-cache: RawExperimentCacheOptionsPersistent | RawExperimentCacheOptionsMemory | boolean
+cache: boolean | { type: "persistent" } & RawExperimentCacheOptionsPersistent | { type: "memory" }
 }
 
 export interface RawExperimentSnapshotOptions {
@@ -1520,6 +1526,7 @@ export interface RawIncremental {
   inferAsyncModules: boolean
   providedExports: boolean
   dependenciesDiagnostics: boolean
+  sideEffects: boolean
   buildChunkGraph: boolean
   moduleIds: boolean
   chunkIds: boolean
@@ -1579,6 +1586,10 @@ export interface RawJavascriptParserOptions {
    * @experimental
    */
   importDynamic?: boolean
+}
+
+export interface RawJsonParserOptions {
+  exportsDepth?: number
 }
 
 export interface RawLazyCompilationOption {
@@ -1749,6 +1760,7 @@ export interface RawOptimizationOptions {
   innerGraph: boolean
   mangleExports: boolean | string
   concatenateModules: boolean
+  avoidEntryIife: boolean
 }
 
 export interface RawOptions {
@@ -1816,12 +1828,13 @@ export interface RawOutputOptions {
 }
 
 export interface RawParserOptions {
-  type: "asset" | "css" | "css/auto" | "css/module" | "javascript" | "javascript/auto" | "javascript/dynamic" | "javascript/esm"
+  type: "asset" | "css" | "css/auto" | "css/module" | "javascript" | "javascript/auto" | "javascript/dynamic" | "javascript/esm" | "json"
   asset?: RawAssetParserOptions
   css?: RawCssParserOptions
   cssAuto?: RawCssAutoParserOptions
   cssModule?: RawCssModuleParserOptions
   javascript?: RawJavascriptParserOptions
+  json?: RawJsonParserOptions
 }
 
 export interface RawPathData {

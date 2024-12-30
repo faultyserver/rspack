@@ -1,6 +1,6 @@
 {
   "name": "monorepo",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "license": "MIT",
   "description": "The fast Rust-based web bundler with webpack-compatible API",
   "private": true,
@@ -30,6 +30,7 @@
     "lint:rs": "node ./scripts/check_rust_dependency.cjs",
     "build:binding:debug": "pnpm --filter @rspack/binding run build:debug",
     "build:binding:release": "pnpm --filter @rspack/binding run build:release",
+    "build:binding:release-debug": "pnpm --filter @rspack/binding run build:release-debug",
     "build:binding:release-prod": "pnpm --filter @rspack/binding run build:release-prod",
     "prepare": "is-ci || husky",
     "test:diff": "pnpm --filter \"@rspack/*\" test:diff",
@@ -41,13 +42,17 @@
     "test:webpack": "pnpm --filter \"webpack-test\" test:metric",
     "doc-coverage": "pnpm --filter \"@rspack/core\" doc-coverage",
     "api-extractor:local": "pnpm --filter \"@rspack/*\" api-extractor --local",
-    "api-extractor:ci": "pnpm --filter \"@rspack/*\" api-extractor:ci"
+    "api-extractor:ci": "pnpm --filter \"@rspack/*\" api-extractor:ci",
+    "bench:ci": "cargo codspeed run && pnpm --filter bench run bench"
   },
   "homepage": "https://rspack.dev",
   "bugs": "https://github.com/web-infra-dev/rspack/issues",
   "repository": {
     "type": "git",
     "url": "https://github.com/web-infra-dev/rspack"
+  },
+  "engines": {
+    "pnpm": "9.15.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -58,7 +63,7 @@
     "@taplo/cli": "^0.7.0",
     "@types/is-ci": "^3.0.4",
     "@types/jest": "29.5.14",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.17.10",
     "check-dependency-version-consistency": "^5.0.0",
     "commander": "12.1.0",
     "cross-env": "^7.0.3",
@@ -77,6 +82,7 @@
     "webpack-cli": "5.1.4",
     "zx": "7.2.3"
   },
+  "packageManager": "pnpm@9.15.1",
   "pnpm": {
     "patchedDependencies": {
       "graceful-fs@4.2.10": "patches/graceful-fs@4.2.10.patch",

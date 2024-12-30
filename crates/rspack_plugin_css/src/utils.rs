@@ -28,7 +28,7 @@ use crate::parser_and_generator::CssExport;
 
 pub const AUTO_PUBLIC_PATH_PLACEHOLDER: &str = "__RSPACK_PLUGIN_CSS_AUTO_PUBLIC_PATH__";
 pub static LEADING_DIGIT_REGEX: LazyLock<Regex> =
-  LazyLock::new(|| Regex::new(r"^\d+").expect("Invalid regexp"));
+  LazyLock::new(|| Regex::new(r"^((-?[0-9])|--)").expect("Invalid regexp"));
 pub static PREFIX_UNDERSCORE_REGEX: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^[0-9_-]").expect("Invalid regexp"));
 
@@ -69,7 +69,7 @@ impl<'a> LocalIdentOptions<'a> {
       }
       let hash = hasher.digest(&output.hash_digest);
       LEADING_DIGIT_REGEX
-        .replace_all(hash.rendered(output.hash_digest_length), "")
+        .replace(hash.rendered(output.hash_digest_length), "_${1}")
         .into_owned()
     };
     LocalIdentNameRenderOptions {
@@ -216,7 +216,7 @@ pub fn stringified_exports<'a>(
             .expect("should have css from module");
 
           let from = serde_json::to_string(
-            ChunkGraph::get_module_id(&compilation.module_ids, from.module_identifier)
+            ChunkGraph::get_module_id(&compilation.module_ids_artifact, from.module_identifier)
               .expect("should have module"),
           )
           .expect("should json stringify module id");
@@ -290,7 +290,7 @@ pub fn css_modules_exports_to_concatenate_module_string<'a>(
             .expect("should have css from module");
 
           let from = serde_json::to_string(
-            ChunkGraph::get_module_id(&compilation.module_ids, from.module_identifier)
+            ChunkGraph::get_module_id(&compilation.module_ids_artifact, from.module_identifier)
               .expect("should have module"),
           )
           .expect("should json stringify module id");

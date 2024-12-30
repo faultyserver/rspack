@@ -1068,6 +1068,13 @@ export type JavascriptParserOptions = {
 	importDynamic?: boolean;
 };
 
+export type JsonParserOptions = {
+	/**
+	 * The depth of json dependency flagged as `exportInfo`.
+	 */
+	exportsDepth?: number;
+};
+
 /** Configure all parsers' options in one place with module.parser. */
 export type ParserOptionsByModuleTypeKnown = {
 	/** Parser options for `asset` modules. */
@@ -1093,6 +1100,9 @@ export type ParserOptionsByModuleTypeKnown = {
 
 	/** Parser options for `javascript/esm` modules. */
 	"javascript/esm"?: JavascriptParserOptions;
+
+	/** Parser options for `json` modules. */
+	json?: JsonParserOptions;
 };
 
 /** Configure all parsers' options in one place with module.parser. */
@@ -2165,7 +2175,7 @@ export type OptimizationSplitChunksCacheGroup = {
 	enforce?: boolean;
 
 	/** Allows to override the filename when and only when it's an initial chunk. */
-	filename?: string;
+	filename?: Filename;
 
 	/**
 	 * Whether to reuse existing chunks when possible.
@@ -2330,6 +2340,11 @@ export type Optimization = {
 	 * The value is `true` in development mode.
 	 * */
 	emitOnErrors?: boolean;
+
+	/**
+	 * Avoid wrapping the entry module in an IIFE.
+	 */
+	avoidEntryIife?: boolean;
 };
 //#endregion
 
@@ -2484,6 +2499,11 @@ export type Incremental = {
 	 * Enables diagnostics for dependencies.
 	 */
 	dependenciesDiagnostics?: boolean;
+
+	/**
+	 * Enables incremental side effects optimization.
+	 */
+	sideEffects?: boolean;
 
 	/**
 	 * Enable incremental build chunk graph.
